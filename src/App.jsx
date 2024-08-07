@@ -6,6 +6,14 @@ import Log from "./components/Log";
 import { WINNING_COMBINATIONS } from "./winning-combinations";
 import GameOver from "./components/GameOver";
 
+const INITIAL_GAME_BOARD = [
+  [null, null, null],
+  [null, null, null],
+  [null, null, null],
+];
+
+const PLAYERS = { X: "Player 1", O: "Player 2" };
+
 function deriveActivePlayer(turns) {
   let curPlayer = "X";
   if (turns.length > 0 && turns[0].player.symbol === "X") {
@@ -14,27 +22,8 @@ function deriveActivePlayer(turns) {
   return curPlayer;
 }
 
-const initialGameBoard = [
-  [null, null, null],
-  [null, null, null],
-  [null, null, null],
-];
-
-export default function App() {
-  const [players, setPlayers] = useState({ X: "Player 1", O: "Player 2" });
-  const [gameTurns, setGameTurns] = useState([]);
-  const curPlayer = deriveActivePlayer(gameTurns);
-
-  const gameBoard = [...initialGameBoard.map((arr) => [...arr])];
-
-  for (const turn of gameTurns) {
-    const { square, player } = turn;
-    const { row, col } = square;
-    gameBoard[row][col] = player.symbol;
-  }
-
+function deriveWinner(gameBoard, players) {
   let winner = null;
-
   for (const comb of WINNING_COMBINATIONS) {
     const firstSymbol = gameBoard[comb[0].row][comb[0].column];
     if (firstSymbol) {
@@ -45,7 +34,28 @@ export default function App() {
       }
     }
   }
+  return winner;
+}
 
+function deriveGameBoard(gameTurns) {
+  const gameBoard = [...INITIAL_GAME_BOARD.map((arr) => [...arr])];
+
+  for (const turn of gameTurns) {
+    const { square, player } = turn;
+    const { row, col } = square;
+    gameBoard[row][col] = player.symbol;
+  }
+
+  return gameBoard;
+}
+
+export default function App() {
+  const [players, setPlayers] = useState(PLAYERS);
+  const [gameTurns, setGameTurns] = useState([]);
+
+  const curPlayer = deriveActivePlayer(gameTurns);
+  const gameBoard = deriveGameBoard(gameTurns);
+  const winner = deriveWinner(gameBoard, players);
   const isDraw = gameTurns.length === 9 && !winner;
 
   function handleSelectSquare(rowIndex, colIndex) {
@@ -80,13 +90,13 @@ export default function App() {
       <div id="game-container">
         <ol id="players" className="highlight-player">
           <Player
-            initialName="Player 1"
+            initialName={PLAYERS.X}
             symbol="X"
             isActive={curPlayer === "X"}
             onChangeName={handlePlayerNameChange}
           />
           <Player
-            initialName="Player 2"
+            initialName={PLAYERS.O}
             symbol="O"
             isActive={curPlayer === "O"}
             onChangeName={handlePlayerNameChange}
