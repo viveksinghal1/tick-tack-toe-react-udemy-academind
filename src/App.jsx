@@ -8,7 +8,7 @@ import GameOver from "./components/GameOver";
 
 function deriveActivePlayer(turns) {
   let curPlayer = "X";
-  if (turns.length > 0 && turns[0].player === "X") {
+  if (turns.length > 0 && turns[0].player.symbol === "X") {
     curPlayer = "O";
   }
   return curPlayer;
@@ -21,6 +21,7 @@ const initialGameBoard = [
 ];
 
 export default function App() {
+  const [players, setPlayers] = useState({ X: "Player 1", O: "Player 2" });
   const [gameTurns, setGameTurns] = useState([]);
   const curPlayer = deriveActivePlayer(gameTurns);
 
@@ -29,7 +30,7 @@ export default function App() {
   for (const turn of gameTurns) {
     const { square, player } = turn;
     const { row, col } = square;
-    gameBoard[row][col] = player;
+    gameBoard[row][col] = player.symbol;
   }
 
   let winner = null;
@@ -40,7 +41,7 @@ export default function App() {
       const secondSymbol = gameBoard[comb[1].row][comb[1].column];
       const thirdSymbol = gameBoard[comb[2].row][comb[2].column];
       if (firstSymbol === secondSymbol && secondSymbol === thirdSymbol) {
-        winner = curPlayer;
+        winner = players[firstSymbol];
       }
     }
   }
@@ -51,7 +52,10 @@ export default function App() {
     setGameTurns((prevTurns) => {
       const curPlayer = deriveActivePlayer(prevTurns);
       const updatedTurns = [
-        { square: { row: rowIndex, col: colIndex }, player: curPlayer },
+        {
+          square: { row: rowIndex, col: colIndex },
+          player: { symbol: curPlayer, name: players[curPlayer] },
+        },
         ...prevTurns,
       ];
       return updatedTurns;
@@ -62,6 +66,15 @@ export default function App() {
     setGameTurns([]);
   }
 
+  function handlePlayerNameChange(symbol, newName) {
+    setPlayers((prevPlayers) => {
+      return {
+        ...prevPlayers,
+        [symbol]: newName,
+      };
+    });
+  }
+
   return (
     <main>
       <div id="game-container">
@@ -70,11 +83,13 @@ export default function App() {
             initialName="Player 1"
             symbol="X"
             isActive={curPlayer === "X"}
+            onChangeName={handlePlayerNameChange}
           />
           <Player
             initialName="Player 2"
             symbol="O"
             isActive={curPlayer === "O"}
+            onChangeName={handlePlayerNameChange}
           />
         </ol>
         {(winner || isDraw) && (
